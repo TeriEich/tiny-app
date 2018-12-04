@@ -1,6 +1,6 @@
-var https = require('https');
-
 function getAndPrintHTML () {
+
+  var https = require('https');
 
   var requestOptions = {
     host: 'sytantris.github.io',
@@ -18,7 +18,6 @@ function getAndPrintHTML () {
       console.log('Response stream complete.');
     });
   });
-
 }
 
 getAndPrintHTML();

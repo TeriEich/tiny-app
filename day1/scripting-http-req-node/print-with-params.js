@@ -1,6 +1,6 @@
-var https = require('https');
-
 function getAndPrintHTML (options) {
+
+  var https = require('https');
 
 //.get vs .request
   https.get(options, function (response) {
@@ -16,7 +16,6 @@ function getAndPrintHTML (options) {
       console.log('Response stream complete.');
     });
   });
-
 }
 
 var requestOptions = {
