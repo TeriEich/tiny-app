@@ -50,7 +50,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 // generates a random string for the shortURL
-function generateRandomString(num) {
+const generateRandomString = ( num => { {
   let alphaNumeric = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let randomString = "";
   for (var i = 0; i < num; i++) {
@@ -58,7 +58,7 @@ function generateRandomString(num) {
   }
   urlDatabase[randomString] = document.getElementById("longURL");
   console.log(urlDatabase);
-}
+});
 
 // handles POST request from urls_new.ejs submission form
 app.post("/urls", (req, res) => {
