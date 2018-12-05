@@ -49,3 +49,33 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// generates a random string for the shortURL
+function generateRandomString(num) {
+  let alphaNumeric = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let randomString = "";
+  for (var i = 0; i < num; i++) {
+    randomString += alphaNumeric.charAt(Math.floor(Math.random() * alphaNumeric.length));
+  }
+  urlDatabase[randomString] = document.getElementById("longURL");
+  console.log(urlDatabase);
+}
+
+// handles POST request from urls_new.ejs submission form
+app.post("/urls", (req, res) => {
+  if (res.statusCode === 200) {
+  res.send("Ok");         // respond with "Ok"
+  generateRandomString(6);
+  // urlDatabase[randomString] = req;
+  console.log(urlDatabase);  // debug statement to see POST params
+  //redirect to (`http://localhost:8080/urls/:${id[shortURL]}`);
+  } else {
+    console.log("Not found")
+  }
+  // longURL = urlDatabase[shortURL].longURL;
+});
+
+// redirects short url requests
+// app.get("/u/:shortURL", (req, res) => {
+//   // let longURL = ...
+//   res.redirect(longURL);
+// });
