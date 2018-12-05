@@ -76,9 +76,15 @@ app.post("/urls", (req, res) => {
     console.log("Not found");
   }
 });
-
 // redirects short url requests
 // app.get("/u/:shortURL", (req, res) => {
 //   // let longURL = ...
 //   res.redirect(longURL);
 // });
+
+
+// deletes a url from the database
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
+});

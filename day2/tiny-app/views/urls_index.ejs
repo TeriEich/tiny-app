@@ -16,13 +16,20 @@
 </header>
 
 <main>
-  <a href='#'>Link for Shortening URL</a>
+  <a href='/urls/new'>Link for Shortening URL</a>
   <ul>
     <% for (shortURL in urls) { %>
-      <li><%= shortURL %> - <%= urls[shortURL] %></li>
+      <li><%= shortURL %> --- <a href=<%= urls[shortURL] %> ><%= urls[shortURL] %></a>
+
+        <form method="POST" action="/urls/<%= shortURL%>/delete">
+          <input type="submit" value="Delete URL">
+        </form>
+      </li>
     <% }; %>
   </ul>
 </main>
 
 </body>
 </html>
+
+<!-- input type="button" value="Delete URL" onclick="" -->
