@@ -15,7 +15,12 @@
 
 <main>
   <ul>
-      <li><%= shortURL %> - <%= urls[shortURL] %></li>
+      <li><%= shortURL %> - <a href=<%= urls[shortURL] %>><%= urls[shortURL] %></a>
+        <form method="POST" action="/urls/<%= shortURL%>">
+          <input id="longURL" type="text" name="longURL" value="<%= urls[shortURL] %>" placeholder="http://" style="width: 300px">
+          <input type="submit" value="Update URL">
+        </form>
+      </li>
   </ul>
 </main>
 

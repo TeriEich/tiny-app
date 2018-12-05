@@ -59,6 +59,7 @@ const generateRandomString = () => {
   return randomString;
 };
 
+// CREATE NEW URL
 // handles POST request from urls_new.ejs submission form
 app.post("/urls", (req, res) => {
   const newId = generateRandomString();
@@ -82,9 +83,16 @@ app.post("/urls", (req, res) => {
 //   res.redirect(longURL);
 // });
 
-
+// DELETE A URL
 // deletes a url from the database
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
+});
+
+// UPDATE A URL
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL;
+  res.redirect("/urls");
+  console.log("req.params.id: ", urlDatabase[req.params.id]);
 });
