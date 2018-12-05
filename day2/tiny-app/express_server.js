@@ -68,8 +68,10 @@ app.post("/urls", (req, res) => {
                       urls: urlDatabase
                       };
   if (res.statusCode === 200) {
-    res.render("urls_show", templateVars)
-    // res.redirect("/urls/:id[newId]}");
+    //***This needs to redirect to the newId's page***
+    //also maybe add in the other error codes?
+    res.render("urls_show", templateVars);
+    // res.redirect("/urls/+(newId)");
   } else {
     console.log("Not found");
   }
