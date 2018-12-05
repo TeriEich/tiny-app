@@ -50,28 +50,29 @@ app.get("/urls/:id", (req, res) => {
 });
 
 // generates a random string for the shortURL
-const generateRandomString = ( num => { {
+const generateRandomString = () => {
   let alphaNumeric = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let randomString = "";
-  for (var i = 0; i < num; i++) {
+  for (var i = 0; i < 6; i++) {
     randomString += alphaNumeric.charAt(Math.floor(Math.random() * alphaNumeric.length));
   }
-  urlDatabase[randomString] = document.getElementById("longURL");
-  console.log(urlDatabase);
-});
+  return randomString;
+};
 
 // handles POST request from urls_new.ejs submission form
 app.post("/urls", (req, res) => {
+  const newId = generateRandomString();
+  urlDatabase[newId] = req.body.longURL;
+  let templateVars = {
+                      shortURL: newId,
+                      urls: urlDatabase
+                      };
   if (res.statusCode === 200) {
-  res.send("Ok");         // respond with "Ok"
-  generateRandomString(6);
-  // urlDatabase[randomString] = req;
-  console.log(urlDatabase);  // debug statement to see POST params
-  //redirect to (`http://localhost:8080/urls/:${id[shortURL]}`);
+    res.render("urls_show", templateVars)
+    // res.redirect("/urls/:id[newId]}");
   } else {
-    console.log("Not found")
+    console.log("Not found");
   }
-  // longURL = urlDatabase[shortURL].longURL;
 });
 
 // redirects short url requests
