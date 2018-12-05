@@ -10,11 +10,19 @@
 </head>
 
 <body>
+
+<header>
+  <% include ./partials/_header %>
+</header>
+
+<main>
   <a href='#'>Link for Shortening URL</a>
   <ul>
     <% for (shortURL in urls) { %>
       <li><%= shortURL %> - <%= urls[shortURL] %></li>
     <% }; %>
   </ul>
+</main>
+
 </body>
 </html>
