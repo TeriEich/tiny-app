@@ -5,6 +5,9 @@ const PORT = 8080;  //default port 8080
 
 app.set("view engine", "ejs");
 
+// adds body-parser to express_server
+app.use(bodyParser.urlencoded({extended: true}));
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -32,6 +35,11 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+// displays urls_new.ejs (submission form)
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 // displays a single URL and its shortened form
 app.get("/urls/:id", (req, res) => {
   let templateVars = {
@@ -41,5 +49,3 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// adds body-parser to express_server
-app.use(bodyParser.urlencoded({extended: true}));
