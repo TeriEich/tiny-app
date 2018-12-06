@@ -1,0 +1,29 @@
+<!-- views/register.ejs -->
+<!-- registers a new user -->
+<!-- *** _header.ejs not used in this file (but maybe should)*** -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>TinyApp</title>
+</head>
+
+<body>
+
+<header>
+  <h1>TinyApp</h1>
+</header>
+
+<form method="POST" action="/register">
+  <p id="emailLabel" class="formLabel">E-mail address:</p>
+  <input type="email" id="email" name="email" placeholder="your email address" style="width: 200px">
+  <p id="passwordLabel" class="formLabel">Password:</p>
+  <input type="password" id="email" name="password" placeholder="password" style="width: 200px">
+  <br>
+  <br>
+  <input type="submit" value="Register">
+</form>
+
+</body>
+
+</html>

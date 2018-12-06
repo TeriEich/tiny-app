@@ -2,18 +2,53 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const app = express();
-const PORT = 8080;  //default port 8080
+const PORT = 8080;
 
 app.set("view engine", "ejs");
 
-// adds body-parser to express_server
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
+
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+const users = {
+  "youGotMail": {
+    id: "youGotMail",
+    email: "tom.and.meg.forever@example.com",
+    password: "foxbooks"
+  },
+  "joeAndTheVolcano": {
+    id: "joeAndTheVolcano",
+    email: "dont.sacrifice.me.bro@example.com",
+    password: "needavacation"
+  }
+};
+
+
+// generates a random string for the shortURL
+const generateRandomString = (num) => {
+  let alphaNumeric = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let randomString = "";
+  for (var i = 0; i < num; i++) {
+    randomString += alphaNumeric.charAt(Math.floor(Math.random() * alphaNumeric.length));
+  }
+  return randomString;
+};
+
+// finds users by email
+const findUser = (emailField) => {
+  for (user in users) {
+    if (emailField === users[user]["email"]) {
+      return true;
+    }
+  }
+  return false;
+};
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -61,20 +96,10 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// generates a random string for the shortURL
-const generateRandomString = () => {
-  let alphaNumeric = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  let randomString = "";
-  for (var i = 0; i < 6; i++) {
-    randomString += alphaNumeric.charAt(Math.floor(Math.random() * alphaNumeric.length));
-  }
-  return randomString;
-};
-
 // CREATE NEW URL
 // handles POST request from urls_new.ejs submission form
 app.post("/urls", (req, res) => {
-  const newId = generateRandomString();
+  const newId = generateRandomString(6);
   urlDatabase[newId] = req.body.longURL;
 
   if (res.statusCode === 200) {
@@ -84,11 +109,14 @@ app.post("/urls", (req, res) => {
     console.log("Not found");
   }
 });
-// redirects short url requests
-// app.get("/u/:shortURL", (req, res) => {
-//   // let longURL = ...
-//   res.redirect(longURL);
-// });
+
+// REDIRECTS shortURL TO longURL
+// ***Add in redirects for error messages
+// see w2d2 url shortening part 2
+app.get("/u/:shortURL", (req, res) => {
+  let longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
+});
 
 // DELETE A URL
 // deletes a url from the database
@@ -116,4 +144,35 @@ app.post('/logout', (req, res) => {
   //clears username cookies
   res.clearCookie('username');
   res.redirect('/urls');
+});
+
+// REGISTRATION BUTTON
+app.get('/register', (req, res) => {
+  res.render('register');
+});
+
+// REGISTER A NEW USER
+app.post('/register', (req, res) => {
+  const { email, password } = req.body;
+  const user = findUser(email);
+
+  if (user === true) {
+    res.statusCode = 400;
+    res.end("User already exists");
+  } else if (!email || !password) {
+    //better way to type this?
+    res.statusCode = 400;
+    res.end("Please fill out all fields!");
+  } else {
+    const userId = generateRandomString(10);
+    users[userId] = userId;
+    users[userId] = {
+                      id: userId,
+                      email,
+                      password
+                    };
+    res.cookie("user_id", userId);
+    res.redirect('/urls');
+  }
+  // console.log('users: ', users);
 });
