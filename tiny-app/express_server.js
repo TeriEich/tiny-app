@@ -9,6 +9,7 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
+//------------------------------------------------------
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -28,6 +29,7 @@ const users = {
   }
 };
 
+//------------------------------------------------------
 
 // generates a random string for the shortURL
 const generateRandomString = (num) => {
@@ -40,7 +42,7 @@ const generateRandomString = (num) => {
 };
 
 // finds users by email
-const findUser = (emailField) => {
+const findEmail = (emailField) => {
   for (user in users) {
     if (emailField === users[user]["email"]) {
       return true;
@@ -49,6 +51,25 @@ const findUser = (emailField) => {
   return false;
 };
 
+// finds the password for a specified user
+const findPassword = (emailField) => {
+  for (user in users) {
+    if (emailField === users[user]["email"]) {
+      return users[user]["password"];
+    }
+  }
+};
+
+// finds user info by userId
+const findUser = (emailField) => {
+  for (user in users) {
+    if (emailField === users[user]["email"]) {
+      return users[user]["id"];
+    }
+  }
+};
+
+//------------------------------------------------------
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -65,6 +86,8 @@ app.get("/urls.json", (req, res) => {
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
+
+//------------------------------------------------------
 
 // displays the list of URLs and their shortened forms
 app.get("/urls", (req, res) => {
@@ -146,13 +169,27 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
+//------------------------------------------------------
+
 // LOGIN BUTTON
-// ***dinosaur code???***
 app.post("/login", (req, res) => {
-  let username = req.body.username;
-  res.cookie("username", username);
-  // res.setHeader("Set-Cookie");
-  res.redirect("/urls");
+  let user = findEmail(req.body.email);
+  let userPassword = findPassword(req.body.email);
+
+  if (!req.body.email || !req.body.password) {
+    res.statusCode = 403;
+    res.end("Please fill out both fields!")
+  } else if (!user) {
+    res.statusCode = 403;
+    res.end("User not found");
+  } else if (req.body.password != userPassword) {
+    res.statusCode = 403;
+    res.end("Incorrect email and/or password");
+  } else {
+    let userId = findUser(req.body.email);
+    res.cookie("user_id", userId);
+    res.redirect("/");
+  }
 });
 
 // LOGIN
@@ -195,7 +232,7 @@ app.get('/register', (req, res) => {
 // REGISTER A NEW USER
 app.post('/register', (req, res) => {
   const { email, password } = req.body;
-  const user = findUser(email);
+  const user = findEmail(email);
 
   if (user === true) {
     res.statusCode = 400;
