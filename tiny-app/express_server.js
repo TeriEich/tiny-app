@@ -33,20 +33,30 @@ app.get("/hello", (req, res) => {
 
 // displays the list of URLs and their shortened forms
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = {
+                        urls: urlDatabase,
+                        shortURL: req.params.id,
+                        username: req.cookies["username"]
+                      };
   res.render("urls_index", templateVars);
 });
 
 // displays urls_new.ejs (submission form)
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = {
+                        urls: urlDatabase,
+                        shortURL: req.params.id,
+                        username: req.cookies["username"]
+                      };
+  res.render("urls_new", templateVars);
 });
 
 // displays a single URL and its shortened form
 app.get("/urls/:id", (req, res) => {
   let templateVars = {
                         urls: urlDatabase,
-                        shortURL: req.params.id
+                        shortURL: req.params.id,
+                        username: req.cookies["username"]
                       };
   res.render("urls_show", templateVars);
 });
@@ -66,14 +76,9 @@ const generateRandomString = () => {
 app.post("/urls", (req, res) => {
   const newId = generateRandomString();
   urlDatabase[newId] = req.body.longURL;
-  let templateVars = {
-                      shortURL: newId,
-                      urls: urlDatabase
-                      };
+
   if (res.statusCode === 200) {
-    //***This needs to redirect to the newId's page***
-    //also maybe add in the other error codes?
-    // res.render("urls_show", templateVars);
+    //***maybe add in the other error codes?***
     res.redirect(`/urls/${newId}`);
   } else {
     console.log("Not found");
