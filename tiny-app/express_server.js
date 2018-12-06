@@ -110,3 +110,10 @@ app.post("/login", (req, res) => {
   // res.setHeader("Set-Cookie");
   res.redirect("/urls");
 });
+
+// LOGOUT
+app.post('/logout', (req, res) => {
+  //clears username cookies
+  res.clearCookie('username');
+  res.redirect('/urls');
+});
