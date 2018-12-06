@@ -71,7 +71,12 @@ app.get("/urls", (req, res) => {
   let templateVars = {
                         urls: urlDatabase,
                         shortURL: req.params.id,
-                        username: req.cookies["username"]
+                        user: {
+                            userId: req.body.userId,
+                            email: req.body.email,
+                            password: req.body.password
+                          }
+                          // users[req.body.userId]
                       };
   res.render("urls_index", templateVars);
 });
@@ -81,7 +86,12 @@ app.get("/urls/new", (req, res) => {
   let templateVars = {
                         urls: urlDatabase,
                         shortURL: req.params.id,
-                        username: req.cookies["username"]
+                        user: {
+                            userId: req.body.userId,
+                            email: req.body.email,
+                            password: req.body.password
+                          }
+                          // users[req.body.userId]
                       };
   res.render("urls_new", templateVars);
 });
@@ -91,7 +101,12 @@ app.get("/urls/:id", (req, res) => {
   let templateVars = {
                         urls: urlDatabase,
                         shortURL: req.params.id,
-                        username: req.cookies["username"]
+                        user:  {
+                            userId: req.body.userId,
+                            email: req.body.email,
+                            password: req.body.password
+                          }
+                          // users[req.body.userId]
                       };
   res.render("urls_show", templateVars);
 });
@@ -131,13 +146,29 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-// LOGIN
+// LOGIN BUTTON
+// ***dinosaur code???***
 app.post("/login", (req, res) => {
   let username = req.body.username;
   res.cookie("username", username);
   // res.setHeader("Set-Cookie");
   res.redirect("/urls");
 });
+
+// LOGIN
+app.get("/login", (req, res) => {
+  let templateVars = {
+                        urls: urlDatabase,
+                        shortURL: req.params.id,
+                        user: {
+                            userId: req.body.userId,
+                            email: req.body.email,
+                            password: req.body.password
+                          }
+                          // users[req.body.userId]
+                      };
+  res.render("login", templateVars);
+})
 
 // LOGOUT
 app.post('/logout', (req, res) => {
@@ -148,7 +179,17 @@ app.post('/logout', (req, res) => {
 
 // REGISTRATION BUTTON
 app.get('/register', (req, res) => {
-  res.render('register');
+  let templateVars = {
+                        urls: urlDatabase,
+                        shortURL: req.params.id,
+                        user: {
+                            userId: req.body.userId,
+                            email: req.body.email,
+                            password: req.body.password
+                          }
+                          // users[req.body.userId]
+                      };
+  res.render('register', templateVars);
 });
 
 // REGISTER A NEW USER

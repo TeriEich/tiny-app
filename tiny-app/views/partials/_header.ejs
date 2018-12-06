@@ -2,21 +2,18 @@
 <!-- creates a header partial -->
 
 <h1>TinyApp</h1>
-<% if (username) { %>
+<% if (user.userId) { %>
   <form method="POST" action="/logout">
     <input type="submit" value="log out">
   </form>
-  <p id="usernameDisplayed">Welcome, <%= username %>!</p>
+  <p id="usernameShow">Welcome, <%= user.userId %>!</p>
 <% } else{ %>
-  <form method="POST" action="/login">
-    <input type="text" id="username" name="username" placeholder="username" style="width: 150px">
-    <br>
-    <input type="password" id="password" name="password" placeholder="password" style="width: 150px">
-    <br>
-    <br>
-    <input type="submit" value="sign in">
+  <form method="GET" action="/login">
+    <input type="submit" value="login">
   </form>
+  <br>
   <form method="GET" action="/register">
     <input type="submit" value="register">
   </form>
+  <br>
 <% } %>
