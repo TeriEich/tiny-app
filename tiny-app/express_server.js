@@ -60,13 +60,38 @@ const findPassword = (emailField) => {
   }
 };
 
-// finds user info by userId
+// finds user info by id
 const findUser = (emailField) => {
   for (user in users) {
     if (emailField === users[user]["email"]) {
       return users[user]["id"];
     }
   }
+};
+
+// cookie helper:
+// ***does not work, development paused until later***
+const setTemplateVars = () => {
+  let templateVars ={};
+  if (!req.cookies.user_id) {
+    templateVars = {
+                      urls: urlDatabase,
+                      shortURL: req.params.id,
+                      user: null
+                    };
+  } else {
+    templateVars = {
+                      urls: urlDatabase,
+                      shortURL: req.params.id,
+                      users: users,
+                      user: {
+                              id: req.cookies.user_id,
+                              email: users[req.cookies.user_id].email,
+                              password: users[req.cookies.user_id].password
+                            }
+                      };
+  }
+  return templateVars;
 };
 
 //------------------------------------------------------
@@ -91,46 +116,73 @@ app.get("/hello", (req, res) => {
 
 // displays the list of URLs and their shortened forms
 app.get("/urls", (req, res) => {
-  let templateVars = {
-                        urls: urlDatabase,
-                        shortURL: req.params.id,
-                        user: {
-                            userId: req.body.userId,
-                            email: req.body.email,
-                            password: req.body.password
-                          }
-                          // users[req.body.userId]
+  let templateVars ={};
+  if (!req.cookies.user_id) {
+    templateVars = {
+                      urls: urlDatabase,
+                      shortURL: req.params.id,
+                      user: null
+                    };
+  } else {
+    templateVars = {
+                      urls: urlDatabase,
+                      shortURL: req.params.id,
+                      users: users,
+                      user: {
+                              id: req.cookies.user_id,
+                              email: users[req.cookies.user_id].email,
+                              password: users[req.cookies.user_id].password
+                            }
                       };
+  }
   res.render("urls_index", templateVars);
 });
 
 // displays urls_new.ejs (submission form)
 app.get("/urls/new", (req, res) => {
-  let templateVars = {
-                        urls: urlDatabase,
-                        shortURL: req.params.id,
-                        user: {
-                            userId: req.body.userId,
-                            email: req.body.email,
-                            password: req.body.password
-                          }
-                          // users[req.body.userId]
+  let templateVars ={};
+  if (!req.cookies.user_id) {
+    templateVars = {
+                      urls: urlDatabase,
+                      shortURL: req.params.id,
+                      user: null
+                    };
+  } else {
+    templateVars = {
+                      urls: urlDatabase,
+                      shortURL: req.params.id,
+                      users: users,
+                      user: {
+                              id: req.cookies.user_id,
+                              email: users[req.cookies.user_id].email,
+                              password: users[req.cookies.user_id].password
+                            }
                       };
+  }
   res.render("urls_new", templateVars);
 });
 
 // displays a single URL and its shortened form
 app.get("/urls/:id", (req, res) => {
-  let templateVars = {
-                        urls: urlDatabase,
-                        shortURL: req.params.id,
-                        user:  {
-                            userId: req.body.userId,
-                            email: req.body.email,
-                            password: req.body.password
-                          }
-                          // users[req.body.userId]
+  let templateVars ={};
+  if (!req.cookies.user_id) {
+    templateVars = {
+                      urls: urlDatabase,
+                      shortURL: req.params.id,
+                      user: null
+                    };
+  } else {
+    templateVars = {
+                      urls: urlDatabase,
+                      shortURL: req.params.id,
+                      users: users,
+                      user: {
+                              id: req.cookies.user_id,
+                              email: users[req.cookies.user_id].email,
+                              password: users[req.cookies.user_id].password
+                            }
                       };
+  }
   res.render("urls_show", templateVars);
 });
 
@@ -171,7 +223,7 @@ app.post("/urls/:id", (req, res) => {
 
 //------------------------------------------------------
 
-// LOGIN BUTTON
+// LOGIN HANDLER
 app.post("/login", (req, res) => {
   let user = findEmail(req.body.email);
   let userPassword = findPassword(req.body.email);
@@ -198,19 +250,17 @@ app.get("/login", (req, res) => {
                         urls: urlDatabase,
                         shortURL: req.params.id,
                         user: {
-                            userId: req.body.userId,
-                            email: req.body.email,
-                            password: req.body.password
-                          }
-                          // users[req.body.userId]
+                              id: req.body.id,
+                              email: req.body.email,
+                              password: req.body.password
+                            }
                       };
   res.render("login", templateVars);
 })
 
-// LOGOUT
+// LOGOUT HANDLER
 app.post('/logout', (req, res) => {
-  //clears username cookies
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
@@ -220,11 +270,10 @@ app.get('/register', (req, res) => {
                         urls: urlDatabase,
                         shortURL: req.params.id,
                         user: {
-                            userId: req.body.userId,
-                            email: req.body.email,
-                            password: req.body.password
-                          }
-                          // users[req.body.userId]
+                              id: req.body.id,
+                              email: req.body.email,
+                              password: req.body.password
+                            }
                       };
   res.render('register', templateVars);
 });
@@ -235,22 +284,21 @@ app.post('/register', (req, res) => {
   const user = findEmail(email);
 
   if (user === true) {
+    //better way to type this?
     res.statusCode = 400;
     res.end("User already exists");
   } else if (!email || !password) {
-    //better way to type this?
     res.statusCode = 400;
     res.end("Please fill out all fields!");
   } else {
     const userId = generateRandomString(10);
-    users[userId] = userId;
-    users[userId] = {
-                      id: userId,
-                      email,
-                      password
+    let newUser = {
+                id: userId,
+                email,
+                password
                     };
+    users[userId] = newUser;
     res.cookie("user_id", userId);
     res.redirect('/urls');
   }
-  // console.log('users: ', users);
 });
