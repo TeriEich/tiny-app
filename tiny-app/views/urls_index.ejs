@@ -14,7 +14,9 @@
   <a href='/urls/new'>Link for Shortening URL</a>
   <ul>
     <% for (shortURL in urls) { %>
-      <li><%= shortURL %> --- <a href=<%= urls[shortURL] %> ><%= urls[shortURL] %></a>
+      <li><a href=<%= urls[shortURL].longURL %> ><%= shortURL %></a> --- <a href=<%= urls[shortURL].longURL %> ><%= urls[shortURL].longURL %></a>
+
+
         <a href=/urls/<%= shortURL %>>Edit</a>
 
         <form method="POST" action="/urls/<%= shortURL%>/delete">

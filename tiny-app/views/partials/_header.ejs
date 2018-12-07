@@ -2,18 +2,8 @@
 
 
 <h1>TinyApp</h1>
-<% if (user) { %>
+
   <form method="POST" action="/logout">
     <input type="submit" value="log out">
   </form>
   <p id="userShow">Username: <%= user.id %></p>
-<% } else { %>
-  <form method="GET" action="/login">
-    <input type="submit" value="login">
-  </form>
-  <br>
-  <form method="GET" action="/register">
-    <input type="submit" value="register">
-  </form>
-  <br>
-<% } %>

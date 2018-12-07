@@ -11,10 +11,23 @@ app.use(cookieParser());
 
 //------------------------------------------------------
 
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+  "b2xVn2": {
+              shortURL: "b2xVn2",
+              longURL: "http://www.lighthouselabs.ca",
+              userID: "youGotMail"
+            },
+  "9sm5xK": {
+              shortURL: "9sm5xK",
+              longURL: "http://www.google.com",
+              userID: "joeAndTheVolcano"
+            }
+
+}
 
 const users = {
   "youGotMail": {
@@ -69,19 +82,42 @@ const findUser = (emailField) => {
   }
 };
 
-// cookie helper:
-// ***does not work, development paused until later***
-const setTemplateVars = () => {
-  let templateVars ={};
+//compares userID with user_id;
+//returns urls that belong to user_id
+// filters urls by owner
+const urlsForUser = (id) => {
+  let ownedUrls = {};
+
+  for (url in urlDatabase) {
+    if (id === urlDatabase[url].userID) {
+      ownedUrls[url] = urlDatabase[url];
+    }
+  }
+  return ownedUrls;
+};
+
+// redirect function:
+const setTemplateVars = (req, res, redi, rend) => {
   if (!req.cookies.user_id) {
-    templateVars = {
-                      urls: urlDatabase,
-                      shortURL: req.params.id,
-                      user: null
-                    };
+    res.redirect(redi);
   } else {
-    templateVars = {
-                      urls: urlDatabase,
+    let templateVars = {
+                        urls: urlsForUser(req.cookies.user_id),
+                        shortURL: req.params.id,
+                        users: users,
+                        user: {
+                                id: req.cookies.user_id,
+                                email: users[req.cookies.user_id].email,
+                                password: users[req.cookies.user_id].password
+                              }
+                        };
+    res.render(rend, templateVars);
+  }
+};
+
+const errTemplateVars = (req, res, redi, err, msg) => {
+  let templateVars = {
+                      urls: urlsForUser(req.cookies.user_id),
                       shortURL: req.params.id,
                       users: users,
                       user: {
@@ -90,10 +126,15 @@ const setTemplateVars = () => {
                               password: users[req.cookies.user_id].password
                             }
                       };
-  }
-  return templateVars;
-};
+  if (templateVars.user.id !== urlDatabase[req.params.id].userID) {
+    res.status(err).send(msg);
+  } res.redirect(redi, setTemplateVars);
+}
 
+// if (user === urlDatabase[req.params.id].userID) {
+//     urlDatabase[req.params.id].longURL = req.body.longURL;
+//     res.redirect("/urls");
+//   } else {
 //------------------------------------------------------
 
 app.get("/", (req, res) => {
@@ -116,82 +157,29 @@ app.get("/hello", (req, res) => {
 
 // displays the list of URLs and their shortened forms
 app.get("/urls", (req, res) => {
-  let templateVars ={};
-  if (!req.cookies.user_id) {
-    templateVars = {
-                      urls: urlDatabase,
-                      shortURL: req.params.id,
-                      user: null
-                    };
-  } else {
-    templateVars = {
-                      urls: urlDatabase,
-                      shortURL: req.params.id,
-                      users: users,
-                      user: {
-                              id: req.cookies.user_id,
-                              email: users[req.cookies.user_id].email,
-                              password: users[req.cookies.user_id].password
-                            }
-                      };
-  }
-  res.render("urls_index", templateVars);
+  setTemplateVars(req, res, "/login", "urls_index");
 });
 
 // displays urls_new.ejs (submission form)
 app.get("/urls/new", (req, res) => {
-  let templateVars ={};
-  if (!req.cookies.user_id) {
-    templateVars = {
-                      urls: urlDatabase,
-                      shortURL: req.params.id,
-                      user: null
-                    };
-  } else {
-    templateVars = {
-                      urls: urlDatabase,
-                      shortURL: req.params.id,
-                      users: users,
-                      user: {
-                              id: req.cookies.user_id,
-                              email: users[req.cookies.user_id].email,
-                              password: users[req.cookies.user_id].password
-                            }
-                      };
-  }
-  res.render("urls_new", templateVars);
+  setTemplateVars(req, res, "/login", "urls_new");
 });
 
 // displays a single URL and its shortened form
 app.get("/urls/:id", (req, res) => {
-  let templateVars ={};
-  if (!req.cookies.user_id) {
-    templateVars = {
-                      urls: urlDatabase,
-                      shortURL: req.params.id,
-                      user: null
-                    };
-  } else {
-    templateVars = {
-                      urls: urlDatabase,
-                      shortURL: req.params.id,
-                      users: users,
-                      user: {
-                              id: req.cookies.user_id,
-                              email: users[req.cookies.user_id].email,
-                              password: users[req.cookies.user_id].password
-                            }
-                      };
-  }
-  res.render("urls_show", templateVars);
+  setTemplateVars(req, res, "/login", "urls_show");
 });
 
 // CREATE NEW URL
 // handles POST request from urls_new.ejs submission form
 app.post("/urls", (req, res) => {
   const newId = generateRandomString(6);
-  urlDatabase[newId] = req.body.longURL;
-
+  let newURL = {
+                shortURL: newId,
+                longURL: req.body.longURL,
+                userID: req.cookies.user_id
+                };
+  urlDatabase[newId] = newURL;
   if (res.statusCode === 200) {
     //***maybe add in the other error codes?***
     res.redirect(`/urls/${newId}`);
@@ -204,21 +192,41 @@ app.post("/urls", (req, res) => {
 // ***Add in redirects for error messages
 // see w2d2 url shortening part 2
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
 // DELETE A URL
 // deletes a url from the database
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  if (req.cookies.user_id === urlDatabase[req.params.id].userID) {
+    delete urlDatabase[req.params.id];
+    res.redirect("/urls");
+  } else {
+    res.statusCode = 403;
+    res.end("Only the authorized user may delete entries");
+  }
 });
 
 // UPDATE A URL
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
-  res.redirect("/urls");
+  let templateVars = {
+                      urls: urlsForUser(req.cookies.user_id),
+                      shortURL: req.params.id,
+                      users: users,
+                      user: {
+                              id: req.cookies.user_id,
+                              email: users[req.cookies.user_id].email,
+                              password: users[req.cookies.user_id].password
+                            }
+                      };
+  if (templateVars.user["id"] === urlDatabase[req.params.id].userID) {
+    urlDatabase[req.params.id].longURL = req.body.longURL;
+    res.redirect("/urls");
+  } else {
+    // errTemplateVars(req, res, "/login", 403, "Only the authorized user may edit entries");
+    res.status(403).send("Only the authorized user may edit entries");
+  }
 });
 
 //------------------------------------------------------
