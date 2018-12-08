@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
+// const hashedPassword = bcrypt.hashSync(password, 10);
 const app = express();
 const PORT = 8080;
 
@@ -33,15 +35,14 @@ const users = {
   "youGotMail": {
     id: "youGotMail",
     email: "tom.and.meg.forever@example.com",
-    password: "foxbooks"
+    password: bcrypt.hashSync("foxbooks", 10)
   },
   "joeAndTheVolcano": {
     id: "joeAndTheVolcano",
     email: "dont.sacrifice.me.bro@example.com",
-    password: "needavacation"
+    password: bcrypt.hashSync("needavacation", 10)
   }
 };
-
 //------------------------------------------------------
 
 // generates a random string for the shortURL
@@ -82,8 +83,13 @@ const findUser = (emailField) => {
   }
 };
 
-//compares userID with user_id;
-//returns urls that belong to user_id
+  //use findUser id to find password
+const findUserPassword = (cb) => {
+  let idByEmail = findUser (cb);
+  console.log('idByEmailpassword: ', idByEmail['password']);
+  return users[idByEmail]['password'];
+}
+
 // filters urls by owner
 const urlsForUser = (id) => {
   let ownedUrls = {};
@@ -96,7 +102,7 @@ const urlsForUser = (id) => {
   return ownedUrls;
 };
 
-// redirect function:
+// redirect function
 const setTemplateVars = (req, res, redi, rend) => {
   if (!req.cookies.user_id) {
     res.redirect(redi);
@@ -114,7 +120,7 @@ const setTemplateVars = (req, res, redi, rend) => {
     res.render(rend, templateVars);
   }
 };
-
+// error message function
 const errTemplateVars = (req, res, redi, err, msg) => {
   let templateVars = {
                       urls: urlsForUser(req.cookies.user_id),
@@ -131,10 +137,6 @@ const errTemplateVars = (req, res, redi, err, msg) => {
   } res.redirect(redi, setTemplateVars);
 }
 
-// if (user === urlDatabase[req.params.id].userID) {
-//     urlDatabase[req.params.id].longURL = req.body.longURL;
-//     res.redirect("/urls");
-//   } else {
 //------------------------------------------------------
 
 app.get("/", (req, res) => {
@@ -233,16 +235,21 @@ app.post("/urls/:id", (req, res) => {
 
 // LOGIN HANDLER
 app.post("/login", (req, res) => {
+  console.log('req.params: ', req.params);
+  console.log('req.body: ', req.body);
+  console.log('req.cookies: ', req.cookies);
   let user = findEmail(req.body.email);
-  let userPassword = findPassword(req.body.email);
-
+  let hashedPassword = findUserPassword(req.body.email);
+  console.log('hashedPassword: ', hashedPassword);
+  let userPassword = bcrypt.compareSync(req.body.password, hashedPassword);
+  // let userPassword = bcrypt.compareSync(req.body.password, [user].password);
   if (!req.body.email || !req.body.password) {
     res.statusCode = 403;
     res.end("Please fill out both fields!")
   } else if (!user) {
     res.statusCode = 403;
     res.end("User not found");
-  } else if (req.body.password != userPassword) {
+  } else if (!userPassword) {
     res.statusCode = 403;
     res.end("Incorrect email and/or password");
   } else {
@@ -290,6 +297,8 @@ app.get('/register', (req, res) => {
 app.post('/register', (req, res) => {
   const { email, password } = req.body;
   const user = findEmail(email);
+  // const password = req.body;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (user === true) {
     //better way to type this?
@@ -303,10 +312,12 @@ app.post('/register', (req, res) => {
     let newUser = {
                 id: userId,
                 email,
-                password
+                password: hashedPassword
                     };
     users[userId] = newUser;
     res.cookie("user_id", userId);
     res.redirect('/urls');
+  console.log('req.body: ', req.body);
+  console.log('userDatabase: ', users);
   }
 });
