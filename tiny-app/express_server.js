@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
+// const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 // const hashedPassword = bcrypt.hashSync(password, 10);
 const app = express();
@@ -9,7 +10,7 @@ const PORT = 8080;
 app.set("view engine", "ejs");
 
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+// app.use(cookieParser());
 
 //------------------------------------------------------
 
@@ -29,7 +30,7 @@ const urlDatabase = {
               userID: "joeAndTheVolcano"
             }
 
-}
+};
 
 const users = {
   "youGotMail": {
@@ -57,8 +58,8 @@ const generateRandomString = (num) => {
 
 // finds users by email
 const findEmail = (emailField) => {
-  for (user in users) {
-    if (emailField === users[user]["email"]) {
+  for (let user in users) {
+    if (emailField === users[user].email) {
       return true;
     }
   }
@@ -67,17 +68,17 @@ const findEmail = (emailField) => {
 
 // finds the password for a specified user
 const findPassword = (emailField) => {
-  for (user in users) {
-    if (emailField === users[user]["email"]) {
-      return users[user]["password"];
+  for (let user in users) {
+    if (emailField === users[user].email) {
+      return users[user].password;
     }
   }
 };
 
 // finds user info by id
 const findUser = (emailField) => {
-  for (user in users) {
-    if (emailField === users[user]["email"]) {
+  for (let user in users) {
+    if (emailField === users[user].email) {
       return users[user]["id"];
     }
   }
@@ -86,15 +87,15 @@ const findUser = (emailField) => {
   //use findUser id to find password
 const findUserPassword = (cb) => {
   let idByEmail = findUser (cb);
-  console.log('idByEmailpassword: ', idByEmail['password']);
-  return users[idByEmail]['password'];
-}
+  console.log('idByEmailpassword: ', idByEmail.password);
+  return users[idByEmail].password;
+};
 
 // filters urls by owner
 const urlsForUser = (id) => {
   let ownedUrls = {};
 
-  for (url in urlDatabase) {
+  for (let url in urlDatabase) {
     if (id === urlDatabase[url].userID) {
       ownedUrls[url] = urlDatabase[url];
     }
@@ -104,17 +105,17 @@ const urlsForUser = (id) => {
 
 // redirect function
 const setTemplateVars = (req, res, redi, rend) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     res.redirect(redi);
   } else {
     let templateVars = {
-                        urls: urlsForUser(req.cookies.user_id),
+                        urls: urlsForUser(req.session.user_id),
                         shortURL: req.params.id,
                         users: users,
                         user: {
-                                id: req.cookies.user_id,
-                                email: users[req.cookies.user_id].email,
-                                password: users[req.cookies.user_id].password
+                                id: req.session.user_id,
+                                email: users[req.session.user_id].email,
+                                password: users[req.session.user_id].password
                               }
                         };
     res.render(rend, templateVars);
@@ -123,19 +124,19 @@ const setTemplateVars = (req, res, redi, rend) => {
 // error message function
 const errTemplateVars = (req, res, redi, err, msg) => {
   let templateVars = {
-                      urls: urlsForUser(req.cookies.user_id),
+                      urls: urlsForUser(req.session.user_id),
                       shortURL: req.params.id,
                       users: users,
                       user: {
-                              id: req.cookies.user_id,
-                              email: users[req.cookies.user_id].email,
-                              password: users[req.cookies.user_id].password
+                              id: req.session.user_id,
+                              email: users[req.session.user_id].email,
+                              password: users[req.session.user_id].password
                             }
                       };
   if (templateVars.user.id !== urlDatabase[req.params.id].userID) {
     res.status(err).send(msg);
   } res.redirect(redi, setTemplateVars);
-}
+};
 
 //------------------------------------------------------
 
@@ -179,7 +180,7 @@ app.post("/urls", (req, res) => {
   let newURL = {
                 shortURL: newId,
                 longURL: req.body.longURL,
-                userID: req.cookies.user_id
+                userID: req.session.user_id
                 };
   urlDatabase[newId] = newURL;
   if (res.statusCode === 200) {
@@ -201,7 +202,7 @@ app.get("/u/:shortURL", (req, res) => {
 // DELETE A URL
 // deletes a url from the database
 app.post("/urls/:id/delete", (req, res) => {
-  if (req.cookies.user_id === urlDatabase[req.params.id].userID) {
+  if (req.session.user_id === urlDatabase[req.params.id].userID) {
     delete urlDatabase[req.params.id];
     res.redirect("/urls");
   } else {
@@ -213,13 +214,13 @@ app.post("/urls/:id/delete", (req, res) => {
 // UPDATE A URL
 app.post("/urls/:id", (req, res) => {
   let templateVars = {
-                      urls: urlsForUser(req.cookies.user_id),
+                      urls: urlsForUser(req.session.user_id),
                       shortURL: req.params.id,
                       users: users,
                       user: {
-                              id: req.cookies.user_id,
-                              email: users[req.cookies.user_id].email,
-                              password: users[req.cookies.user_id].password
+                              id: req.session.user_id,
+                              email: users[req.session.user_id].email,
+                              password: users[req.session.user_id].password
                             }
                       };
   if (templateVars.user["id"] === urlDatabase[req.params.id].userID) {
@@ -235,17 +236,13 @@ app.post("/urls/:id", (req, res) => {
 
 // LOGIN HANDLER
 app.post("/login", (req, res) => {
-  console.log('req.params: ', req.params);
-  console.log('req.body: ', req.body);
-  console.log('req.cookies: ', req.cookies);
   let user = findEmail(req.body.email);
   let hashedPassword = findUserPassword(req.body.email);
-  console.log('hashedPassword: ', hashedPassword);
   let userPassword = bcrypt.compareSync(req.body.password, hashedPassword);
   // let userPassword = bcrypt.compareSync(req.body.password, [user].password);
   if (!req.body.email || !req.body.password) {
     res.statusCode = 403;
-    res.end("Please fill out both fields!")
+    res.end("Please fill out both fields!");
   } else if (!user) {
     res.statusCode = 403;
     res.end("User not found");
@@ -254,7 +251,8 @@ app.post("/login", (req, res) => {
     res.end("Incorrect email and/or password");
   } else {
     let userId = findUser(req.body.email);
-    res.cookie("user_id", userId);
+    req.session.user_id = "user_id";
+    // res.cookie("user_id", userId);
     res.redirect("/");
   }
 });
@@ -271,7 +269,7 @@ app.get("/login", (req, res) => {
                             }
                       };
   res.render("login", templateVars);
-})
+});
 
 // LOGOUT HANDLER
 app.post('/logout', (req, res) => {
