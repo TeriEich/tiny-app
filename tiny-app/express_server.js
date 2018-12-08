@@ -10,6 +10,11 @@ const PORT = 8080;
 app.set("view engine", "ejs");
 
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieSession({
+  name: 'session',
+  keys: ['randomStringOfWords'],
+  maxAge: 24 * 60 * 60 * 1000
+}));
 // app.use(cookieParser());
 
 //------------------------------------------------------
@@ -85,19 +90,33 @@ const findUser = (emailField) => {
 };
 
   //use findUser id to find password
-const findUserPassword = (cb) => {
-  let idByEmail = findUser (cb);
-  console.log('idByEmailpassword: ', idByEmail.password);
-  return users[idByEmail].password;
-};
+// const findUserPassword = (cb) => {
+//   let idByEmail = findUser (cb);
+//   // console.log('idByEmailpassword: ', idByEmail.password);
+//   return [idByEmail].password;
+// };
 
-// filters urls by owner
+// filters urls by owner for /urls:
 const urlsForUser = (id) => {
   let ownedUrls = {};
 
   for (let url in urlDatabase) {
     if (id === urlDatabase[url].userID) {
       ownedUrls[url] = urlDatabase[url];
+    }
+  }
+  return ownedUrls;
+};
+
+// filters a url by owner for /urls/:id :
+const urlPageForUser = (id) => {
+  let ownedUrls = {};
+
+  for (let url in urlDatabase) {
+    if (id === urlDatabase[url].userID) {
+      ownedUrls[url] = urlDatabase[url];
+    // } else {
+      // res.status(403).send("Only the authorized user may view this page");
     }
   }
   return ownedUrls;
@@ -114,17 +133,18 @@ const setTemplateVars = (req, res, redi, rend) => {
                         users: users,
                         user: {
                                 id: req.session.user_id,
-                                email: users[req.session.user_id].email,
-                                password: users[req.session.user_id].password
+                                email: req.body.email,
+                                password: findPassword(req.body.email)
                               }
                         };
     res.render(rend, templateVars);
   }
 };
+
 // error message function
 const errTemplateVars = (req, res, redi, err, msg) => {
   let templateVars = {
-                      urls: urlsForUser(req.session.user_id),
+                      urls: urlPageForUser(req.session.user_id),
                       shortURL: req.params.id,
                       users: users,
                       user: {
@@ -134,8 +154,11 @@ const errTemplateVars = (req, res, redi, err, msg) => {
                             }
                       };
   if (templateVars.user.id !== urlDatabase[req.params.id].userID) {
-    res.status(err).send(msg);
-  } res.redirect(redi, setTemplateVars);
+    res.statusCode = err;
+    res.end(msg);
+  } else {
+    res.redirect(redi);
+  }
 };
 
 //------------------------------------------------------
@@ -170,7 +193,14 @@ app.get("/urls/new", (req, res) => {
 
 // displays a single URL and its shortened form
 app.get("/urls/:id", (req, res) => {
-  setTemplateVars(req, res, "/login", "urls_show");
+  if (!req.session.user_id) {
+    res.statusCode = 403;
+    res.send("Only the authorized user may view this page");
+  } else if (req.session.user_id !== urlDatabase[req.params.id].userID) {
+    errTemplateVars(req, res, "urls_show", 403, "Only the authorized user may view this page");
+  } else {
+    setTemplateVars(req, res, "/login", "urls_show");
+  }
 });
 
 // CREATE NEW URL
@@ -213,23 +243,8 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // UPDATE A URL
 app.post("/urls/:id", (req, res) => {
-  let templateVars = {
-                      urls: urlsForUser(req.session.user_id),
-                      shortURL: req.params.id,
-                      users: users,
-                      user: {
-                              id: req.session.user_id,
-                              email: users[req.session.user_id].email,
-                              password: users[req.session.user_id].password
-                            }
-                      };
-  if (templateVars.user["id"] === urlDatabase[req.params.id].userID) {
-    urlDatabase[req.params.id].longURL = req.body.longURL;
-    res.redirect("/urls");
-  } else {
-    // errTemplateVars(req, res, "/login", 403, "Only the authorized user may edit entries");
-    res.status(403).send("Only the authorized user may edit entries");
-  }
+  urlDatabase[req.params.id].longURL = req.body.longURL;
+  res.redirect("/urls");
 });
 
 //------------------------------------------------------
@@ -237,23 +252,23 @@ app.post("/urls/:id", (req, res) => {
 // LOGIN HANDLER
 app.post("/login", (req, res) => {
   let user = findEmail(req.body.email);
-  let hashedPassword = findUserPassword(req.body.email);
-  let userPassword = bcrypt.compareSync(req.body.password, hashedPassword);
-  // let userPassword = bcrypt.compareSync(req.body.password, [user].password);
   if (!req.body.email || !req.body.password) {
     res.statusCode = 403;
     res.end("Please fill out both fields!");
   } else if (!user) {
     res.statusCode = 403;
     res.end("User not found");
-  } else if (!userPassword) {
-    res.statusCode = 403;
-    res.end("Incorrect email and/or password");
   } else {
-    let userId = findUser(req.body.email);
-    req.session.user_id = "user_id";
-    // res.cookie("user_id", userId);
-    res.redirect("/");
+    let hashedPassword = findPassword(req.body.email);
+    let userPassword = bcrypt.compareSync(req.body.password, hashedPassword);
+    if (!userPassword) {
+      res.statusCode = 403;
+      res.end("Incorrect email and/or password");
+    } else {
+      let userId = findUser(req.body.email);
+      req.session.user_id = userId;
+      res.redirect("/");
+    }
   }
 });
 
@@ -273,7 +288,7 @@ app.get("/login", (req, res) => {
 
 // LOGOUT HANDLER
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 });
 
@@ -295,7 +310,6 @@ app.get('/register', (req, res) => {
 app.post('/register', (req, res) => {
   const { email, password } = req.body;
   const user = findEmail(email);
-  // const password = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (user === true) {
@@ -313,9 +327,7 @@ app.post('/register', (req, res) => {
                 password: hashedPassword
                     };
     users[userId] = newUser;
-    res.cookie("user_id", userId);
+    req.session.user_id = newUser.id;
     res.redirect('/urls');
-  console.log('req.body: ', req.body);
-  console.log('userDatabase: ', users);
   }
 });
