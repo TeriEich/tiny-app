@@ -117,7 +117,7 @@ const setTemplateVars = (req, res, rend) => {
                               email: users[req.session.user_id].email,
                               password: users[req.session.user_id].password
                             }
-                      };
+  };
   res.render(rend, templateVars);
 };
 
@@ -187,7 +187,7 @@ app.post('/urls', (req, res) => {
                 shortURL: newId,
                 longURL: req.body.longURL,
                 userID: req.session.user_id
-                };
+  };
   urlDatabase[newId] = newURL;
   if (res.statusCode === 200) {
     res.redirect(`/urls/${newId}`);
@@ -264,7 +264,7 @@ app.get('/login', (req, res) => {
                               email: req.body.email,
                               password: req.body.password
                             }
-                      };
+  };
   res.render('login', templateVars);
 });
 
@@ -288,7 +288,7 @@ app.get('/register', (req, res) => {
                               email: req.body.email,
                               password: req.body.password
                             }
-                      };
+  };
   res.render('register', templateVars);
 });
 
@@ -310,7 +310,7 @@ app.post('/register', (req, res) => {
                 id: userId,
                 email,
                 password: hashedPassword
-                    };
+    };
     users[userId] = newUser;
     req.session.user_id = newUser.id;
     res.redirect('/urls');
