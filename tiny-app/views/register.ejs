@@ -1,33 +1,31 @@
-<!-- views/register.ejs -->
-<!-- registers a new user -->
-<!-- *** _header.ejs not used in this file (but maybe should)*** -->
-
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <title>TinyApp</title>
-</head>
+  <head>
+    <title>TinyApp</title>
+  </head>
 
-<body>
+  <body style="font-size:20px; padding:50px;">
 
-<header>
-  <h1>TinyApp</h1>
-</header>
+  <header>
+    <% include ./partials/_header %>
+  </header>
 
-<main>
+  <main>
 
-<form method="POST" action="/register">
-  <p id="emailLabel" class="formLabel">E-mail address:</p>
-  <input type="email" id="email" name="email" placeholder="your email address" style="width: 200px">
-  <p id="passwordLabel" class="formLabel">Password:</p>
-  <input type="password" id="email" name="password" placeholder="password" style="width: 200px">
-  <br>
-  <br>
-  <input type="submit" value="Register">
-</form>
+    <br>
+    <br>
+    <form method="POST" action="/register">
+        <p class="formLabel" style="display: inline-block">E-mail address:</p>
+        <input type="email" id="emailRegister" name="email" placeholder="your email address" style="width: 200px">
+        <br>
+        <p class="formLabel" style="display: inline-block">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Password:</p>
+        <input type="password" id="passwordRegister" name="password" placeholder="password" style="width: 200px">
+        <br>
+        <input type="submit" value="Register">
+    </form>
 
-</main>
+  </main>
 
-</body>
+  </body>
 
 </html>
